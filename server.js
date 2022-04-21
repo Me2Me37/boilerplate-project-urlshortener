@@ -13,7 +13,7 @@ const Schema = mongoose.Schema
 
 // Basic Configuration
 const port = process.env.PORT || 3000;
-mongoose.connect(process.env.DB_URI, { useNewUrlParser: true, useUnifiedTopology: true});
+mongoose.connect(process.env.DB_URI, { useNewUrlParser: true, useUnifiedTopology: true}); 
 
 app.use(cors());
 
@@ -21,6 +21,8 @@ app.use('/public', express.static(`${process.cwd()}/public`));
 
 
 // Your first API endpoint
+
+
 var ShortUrl = mongoose.model('ShortUrl', new Schema({ 
   short_url: String,
   original_url: String,
@@ -44,15 +46,26 @@ app.post("/api/shorturl/", (req, res) => {
     original_url: client_requested_url,
     suffix: suffix
   });
-  newURL.save((err, doc) => {
-    if (err) return console.log(err);
-    res.json({
-      "saved": true,
-      "short_url": newURL.short_url,
-      "original_url": newURL.original_url,
-      "suffix": newURL.suffix
-    });
-  });
+  const something = dns.lookup(urlparser.parse(client_requested_url).hostname, (error, address) => {
+    if (!address) {
+      res.json({ error: "Invalid URL"})
+    } else {
+      newURL.save((err, data) => {
+        res.json({
+          "original_url": newURL.original_url,
+          "short_url": newURL.suffix
+        })
+      }
+      )
+    }
+  })
+  // newURL.save((err, doc) => {
+  //   if (err) return console.log(err);
+  //   res.json({
+  //     "original_url": newURL.original_url,
+  //     "short_url": newURL.suffix
+  //   });
+  // });
 });
 
 app.get("/api/shorturl/:suffix", (req, res) => {
